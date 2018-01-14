@@ -1,37 +1,52 @@
-#Rory Garner
-#C00193506
-#IT Carlow
-#Software Development
-
-# Currently pulling in all the ratings from the first Yelp search page (link declared below)
-# assigning each star rating a variable
-# Pulling in the whole review as a list element
-
-from urllib.request import urlopen
+import requests
 from bs4 import BeautifulSoup
+import re
+import csv
 
-#content = urlopen("http://itcarlow.ie")
-#content = urlopen("http://testing-ground.scraping.pro/blocks")
-#content = urlopen("https://www.yelp.com/biz/new-york-city-new-york-14")
-content = urlopen("https://www.yelp.com/search?find_desc=Restaurants&find_loc=New+York,+NY&start=200")
+business_name = []
+street_address = []
+address_region = []
+postal_code = []
+pages = []
+rating = []
+new = []
+nn = []
 
-soup = BeautifulSoup(content.read(),"lxml")
+for i in range(2, 4):
+    url = 'https://www.yellowpages.com/search?search_terms=restaurant&geo_location_terms=New%20York%2C%20NY&page=' + str(i)
+    pages.append(url)
 
-div1 = soup.find_all('div', class_="i-stars i-stars--regular-1 rating-large")
-div2 = soup.find_all('div', class_="i-stars i-stars--regular-2 rating-large")
-div3 = soup.find_all('div', class_="i-stars i-stars--regular-3 rating-large")
-div4 = soup.find_all('div', class_="i-stars i-stars--regular-4 rating-large")
-div5 = soup.find_all('div', class_="i-stars i-stars--regular-5 rating-large")
+for p in pages:
+    req = requests.get(p)
+    soup = BeautifulSoup(req.text, "lxml")
+    g_data = soup.find_all("div", {"class": "info"})
 
+    for item in g_data:
+        try:
+            business_name.append(item.contents[0].find_all("a", {"class": "business-name"})[0].text)
+        except:
+            pass
+        try:
+            street_address.append(item.contents[1].find_all("span", {"itemprop": "streetAddress"})[0].text)
+        except:
+            pass
+        try:
+            postal_code.append(item.contents[1].find_all("span", {"itemprop": "postalCode"})[0].text)
+        except:
+            pass
+        try:
+            rating.append(str(item.contents[1].find_all("div", attrs={"class": "result-rating"})))
+        except:
+            pass
 
-fullReview = soup.find_all('li', class_="regular-search-result")
-count = len(fullReview)
-titleTag = soup.html.head.title
+for word in rating:
+    new.append(re.findall(r'"([^"]*)"', word))
+for i in new:
+     nn.append(i[:1])
 
-
-print(fullReview)
-print(count)
-print(titleTag)
-print()
-#print(div1,div2,div3,div4, div5)
-#print(content.read())
+rows = zip(business_name, street_address, postal_code, nn)
+with open('yellowPages.csv', 'w', encoding="utf-8", newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(['Business_Name', 'Street_Address', 'Zip_Code', 'rating'])
+    for row in rows:
+        writer.writerow(row)
