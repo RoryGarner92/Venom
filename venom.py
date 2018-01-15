@@ -3,14 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import csv
 
-business_name = []
-street_address = []
-address_region = []
-postal_code = []
-pages = []
-rating = []
-new = []
-nn = []
+business_name, street_address, address_region, postal_code, pages, rating, new, nn = [], [], [], [], [], [], [], []
 
 
 def get_pages():
